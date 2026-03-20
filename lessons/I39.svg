@@ -1,0 +1,66 @@
+<svg id="diagram" viewBox="0 0 840 520" role="img" aria-labelledby="diagramTitle diagramDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="diagramTitle">Diagram for Proposition I.39</title>
+  <desc id="diagramDesc">Equal triangles ABC and DBC on base BC. Join AD. Assume AD not parallel BC, draw AE parallel BC meeting BD produced at E, join EC.</desc>
+
+  <defs>
+    <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#16a34a" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Base -->
+  <line id="BC" x1="170" y1="360" x2="370" y2="360" stroke="var(--svg-ink)" stroke-width="2"/>
+
+  <!-- Triangle ABC -->
+  <g id="triABC">
+    <line id="AB" x1="270" y1="120" x2="170" y2="360" stroke="var(--svg-ink)" stroke-width="2"/>
+    <line id="AC" x1="270" y1="120" x2="370" y2="360" stroke="var(--svg-ink)" stroke-width="2"/>
+  </g>
+
+  <!-- Triangle DBC -->
+  <g id="triDBC">
+    <line id="BD" x1="170" y1="360" x2="300" y2="190" stroke="var(--svg-ink)" stroke-width="2"/>
+    <line id="DC" x1="300" y1="190" x2="370" y2="360" stroke="var(--svg-ink)" stroke-width="2"/>
+  </g>
+
+  <!-- Join AD (hidden initially) -->
+  <line id="AD" class="hidden no-draw" aria-hidden="true"
+        x1="270" y1="120" x2="300" y2="190"
+        stroke="#64748b" stroke-width="2.5" stroke-dasharray="6 6"/>
+
+  <!-- Assumed parallel through A: AE (hidden initially) -->
+  <line id="AE" class="hidden no-draw" aria-hidden="true"
+        x1="40" y1="120" x2="800" y2="120"
+        stroke="var(--svg-grid)" stroke-width="2" stroke-dasharray="6 8"/>
+
+  <!-- BD produced to meet AE at E: BE (hidden initially) -->
+  <line id="BE" class="hidden no-draw" aria-hidden="true"
+        x1="170" y1="360" x2="354" y2="120"
+        stroke="#6b7280" stroke-width="2"/>
+
+  <!-- Join EC (hidden initially) -->
+  <line id="EC" class="hidden no-draw" aria-hidden="true"
+        x1="354" y1="120" x2="370" y2="360"
+        stroke="#6b7280" stroke-width="2"/>
+
+  <!-- Point E marker (hidden initially) -->
+  <circle id="ptE" class="hidden" aria-hidden="true" cx="354" cy="120" r="4" fill="var(--svg-ink)"></circle>
+
+  <!-- Explore handles -->
+  <g id="explore-handles" class="hidden" aria-hidden="true">
+    <circle id="handleA_ring" class="handle-ring" cx="270" cy="120" r="14"></circle>
+    <circle id="handleA" class="handle" cx="270" cy="120" r="8" tabindex="0" aria-label="Drag point A"></circle>
+
+    <circle id="handleD_ring" class="handle-ring" cx="300" cy="190" r="14"></circle>
+    <circle id="handleD" class="handle" cx="300" cy="190" r="8" tabindex="0" aria-label="Drag point D"></circle>
+  </g>
+
+  <!-- Labels -->
+  <g id="labels" font-size="18" font-weight="bold" fill="var(--svg-ink)">
+    <text id="lblA" x="264" y="110">A</text>
+    <text id="lblB" x="160" y="385">B</text>
+    <text id="lblC" x="365" y="385">C</text>
+    <text id="lblD" x="294" y="180">D</text>
+    <text id="lblE" class="hidden" aria-hidden="true" x="360" y="110">E</text>
+  </g>
+</svg>
