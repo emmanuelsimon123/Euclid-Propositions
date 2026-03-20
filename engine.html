@@ -24,7 +24,12 @@
     }
 
     * { box-sizing: border-box; }
-    html, body { overflow-x: hidden; overscroll-behavior: none; }
+
+    /* SCROLL FIX:
+       overscroll-behavior: none can make scrolling feel "dead" in some setups.
+       Use auto so wheel/trackpad scrolling behaves normally. */
+    html, body { overflow-x: hidden; overscroll-behavior: auto; }
+
     body {
       font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
       margin: 0; background: var(--bg); color: var(--ink);
@@ -82,12 +87,11 @@
 
     .svg-wrapper { position: relative; width: 100%; flex-grow: 1; }
 
-    /* ========= SCROLL FIX =========
-       Don't disable scrolling gestures on the whole diagram area.
-       Only disable touch actions on the draggable handles themselves. */
-    .svg-wrapper, #diagram, #explore-handles { touch-action: pan-y; }
+    /* SCROLL FIX:
+       Previously, touch-action:none on the whole SVG region can break scrolling behavior.
+       Allow normal scrolling everywhere; only handles can block touch actions. */
+    .svg-wrapper, #diagram, #explore-handles { touch-action: auto; }
     .handle { touch-action: none; }
-    /* ============================== */
 
     svg { width: 100%; height: auto; border-radius: 6px; background: var(--board-bg); display: block; }
 
@@ -133,7 +137,7 @@
     .mcq .feedback.bad { color: var(--hilite); }
 
     .guiding { background: var(--row-hover); border: 1px solid var(--border); border-radius: 8px; padding: .75rem .9rem; margin-bottom: 1rem; }
-    .guiding h2 { margin: .2rem 0 .4rem; font-size: .05rem; }
+    .guiding h2 { margin: .2rem 0 .4rem; font-size: 1.05rem; }
 
     .tchart-wrap { overflow: visible; }
     .tchart { width: 100%; border-collapse: collapse; table-layout: fixed; }
