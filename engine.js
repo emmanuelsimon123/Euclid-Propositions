@@ -134,9 +134,6 @@ let LESSON = null;
   document.addEventListener('scroll', () => {
     const active = document.querySelector('.badge.has-tooltip:hover');
     if (active) {
-      // keep it in the right place while scrolling
-      const fakeEvt = null;
-      // recompute
       const rect = active.getBoundingClientRect();
       const t = tip;
       if (!t || t.style.display === 'none') return;
@@ -208,9 +205,7 @@ const Diagram = (() => {
   function removeTriangleHatch(name) { document.getElementById(`tri${name}fill`)?.remove(); }
 
   // ✅ HATCHING DISABLED: do nothing (no green shading)
-  function addTriangleHatch(name) {
-    return;
-  }
+  function addTriangleHatch(name) { return; }
 
   function clearHighlights() {
     const svg = get('diagram');
@@ -237,10 +232,14 @@ const Diagram = (() => {
 
 /* =========================================================
    Explore Mode (generic; per-lesson update function)
+   FIX: only listen for pointermove while actively dragging.
 ========================================================= */
 const Explore = (() => {
   let enabled = false;
   let dragKey = null;
+  let dragPointerId = null;
+  let draggingEl = null;
+
   let P = {}; // {A:{x,y}, D:{x,y}, ...}
 
   function initFromLesson() {
@@ -263,33 +262,28 @@ const Explore = (() => {
       g.classList.toggle('hidden', !enabled);
       g.setAttribute('aria-hidden', enabled ? 'false' : 'true');
     }
+    if (!enabled) stopDrag();
     if (enabled) update();
   }
 
   function pointerToSvgPoint(evt) {
     const svg = Diagram.get('diagram');
-    if (!svg) return {x:0,y:0};
+    if (!svg) return { x: 0, y: 0 };
     const ctm = svg.getScreenCTM();
-    if (!ctm) return {x:0,y:0};
+    if (!ctm) return { x: 0, y: 0 };
     const pt = svg.createSVGPoint();
     pt.x = evt.clientX; pt.y = evt.clientY;
     const sp = pt.matrixTransform(ctm.inverse());
     return { x: sp.x, y: sp.y };
   }
 
-  function startDrag(key, evt) {
-    if (!enabled) return;
-    dragKey = key;
-    evt.preventDefault();
-    evt.target.setPointerCapture?.(evt.pointerId);
-  }
-  function stopDrag() { dragKey = null; }
-
   function onMove(evt) {
     if (!enabled || !dragKey) return;
+
+    // While dragging, prevent page from scrolling/panning
     evt.preventDefault();
 
-    const {x,y} = pointerToSvgPoint(evt);
+    const { x, y } = pointerToSvgPoint(evt);
     const h = LESSON.explore.handles[dragKey];
 
     const clampX = h.clampX || [-Infinity, Infinity];
@@ -299,6 +293,39 @@ const Explore = (() => {
     P[dragKey].y = clamp(y, clampY[0], clampY[1]);
 
     update();
+  }
+
+  const MOVE_OPTS = { passive: false };
+
+  function stopDrag() {
+    // Remove move listeners so scrolling works normally
+    window.removeEventListener('pointermove', onMove, MOVE_OPTS);
+    window.removeEventListener('pointerup', stopDrag);
+    window.removeEventListener('pointercancel', stopDrag);
+
+    // Release capture (best-effort)
+    try { draggingEl?.releasePointerCapture?.(dragPointerId); } catch (e) {}
+
+    dragKey = null;
+    dragPointerId = null;
+    draggingEl = null;
+  }
+
+  function startDrag(key, evt) {
+    if (!enabled) return;
+    dragKey = key;
+    dragPointerId = evt.pointerId;
+    draggingEl = evt.target;
+
+    evt.preventDefault();
+
+    // Capture pointer so drag continues smoothly
+    draggingEl?.setPointerCapture?.(evt.pointerId);
+
+    // Only listen while dragging (important for scrolling)
+    window.addEventListener('pointermove', onMove, MOVE_OPTS);
+    window.addEventListener('pointerup', stopDrag);
+    window.addEventListener('pointercancel', stopDrag);
   }
 
   function update() {
@@ -329,10 +356,8 @@ const Explore = (() => {
     for (const key of Object.keys(handles)) {
       const el = Diagram.get(handles[key].handleId);
       el?.addEventListener('pointerdown', (e) => startDrag(key, e));
+      el?.addEventListener('lostpointercapture', stopDrag);
     }
-    window.addEventListener('pointerup', stopDrag);
-    window.addEventListener('pointercancel', stopDrag);
-    window.addEventListener('pointermove', onMove, { passive: false });
   }
 
   return { bind, setEnabled, isEnabled: () => enabled, update, resetPositions };
@@ -729,7 +754,7 @@ const Proof = (() => {
     else if (current === -1) setActive(0, { scroll: false });
 
     autoplay = setInterval(() => {
-      if (current >= LESSON.steps.length - 1 || !isStepSolved(current)) { stop(); return; }
+      if (current >= LESON.steps.length - 1 || !isStepSolved(current)) { stop(); return; }
       next({ scroll: true, setHash: true, fromAutoplay: true });
     }, 3300);
 
