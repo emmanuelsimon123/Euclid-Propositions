@@ -73,8 +73,8 @@ function jaccard(aTokens, bTokens) {
 let LESSON = null;
 
 /* =========================================================
-   Floating tooltip system (fixes tooltips being covered/clipped)
-   Uses existing: <span class="badge has-tooltip" data-tooltip="...">
+   Floating tooltip system (fixes tooltip being covered by chart)
+   Uses existing: .badge.has-tooltip[data-tooltip="..."]
 ========================================================= */
 (function installFloatingTooltips(){
   let tip = null;
@@ -201,7 +201,7 @@ const Diagram = (() => {
     svg?.querySelectorAll('.highlight, .hl-strong, .hl-parallelogram, .hl-tri, .hover-hl')
       .forEach(el => el.classList.remove('highlight','hl-strong','hl-parallelogram','hl-tri','hover-hl'));
 
-    // FIX: remove ALL triangle hatch polygons so none "stick"
+    // FIX: remove ALL triangle hatches so none stick between steps
     document.querySelectorAll('polygon[id^="tri"][id$="fill"]').forEach(el => el.remove());
 
     const stamp = document.getElementById('qed-stamp');
@@ -481,6 +481,7 @@ const Proof = (() => {
       ? '<span aria-hidden="true">☀️</span> Light'
       : '<span aria-hidden="true">🌙</span> Dark';
     el.btnDark.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+    el.btnDark.setAttribute('aria-label', isDark ? 'Disable dark mode' : 'Enable dark mode');
   }
 
   function prefersReducedMotion() {
