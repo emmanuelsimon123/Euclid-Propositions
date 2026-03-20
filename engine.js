@@ -58,7 +58,6 @@ function randomU32() {
     crypto.getRandomValues(a);
     return a[0] >>> 0;
   } catch (e) {
-    // fallback
     return ((Date.now() ^ (Math.random() * 0xFFFFFFFF)) >>> 0);
   }
 }
@@ -85,7 +84,6 @@ let LESSON = null;
 
 /* =========================================================
    Floating tooltip system (tooltips over everything)
-   Uses: <span class="badge has-tooltip" data-tooltip="...">
 ========================================================= */
 (function installFloatingTooltips(){
   let tip = null;
@@ -116,7 +114,6 @@ let LESSON = null;
   function positionTip(target) {
     if (!tip || tip.style.display === 'none') return;
     const rect = target.getBoundingClientRect();
-
     const margin = 10;
     const tipRect = tip.getBoundingClientRect();
 
@@ -144,36 +141,18 @@ let LESSON = null;
 
   document.addEventListener('scroll', () => {
     const active = document.querySelector('.badge.has-tooltip:hover');
-    if (active) {
-      const rect = active.getBoundingClientRect();
-      const t = tip;
-      if (!t || t.style.display === 'none') return;
-      const margin = 10;
-      const tipRect = t.getBoundingClientRect();
-      let left = rect.left + rect.width / 2 - tipRect.width / 2;
-      left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
-      let top = rect.top - tipRect.height - 10;
-      if (top < margin) top = rect.bottom + 10;
-      t.style.left = `${left}px`;
-      t.style.top = `${top}px`;
-    }
+    if (!active) return;
+    const t = tip;
+    if (!t || t.style.display === 'none') return;
+    positionTip(active);
   }, true);
 
   window.addEventListener('resize', () => {
     const active = document.querySelector('.badge.has-tooltip:hover');
-    if (active) {
-      const rect = active.getBoundingClientRect();
-      const t = tip;
-      if (!t || t.style.display === 'none') return;
-      const margin = 10;
-      const tipRect = t.getBoundingClientRect();
-      let left = rect.left + rect.width / 2 - tipRect.width / 2;
-      left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
-      let top = rect.top - tipRect.height - 10;
-      if (top < margin) top = rect.bottom + 10;
-      t.style.left = `${left}px`;
-      t.style.top = `${top}px`;
-    }
+    if (!active) return;
+    const t = tip;
+    if (!t || t.style.display === 'none') return;
+    positionTip(active);
   });
 })();
 
@@ -203,31 +182,34 @@ const Diagram = (() => {
     }
   }
 
-  function showMany(ids) {
+  // UPDATED: allow animate=false for “jump to step N” rebuilds
+  function showMany(ids, animate = true) {
     const els = ids.map(get).filter(Boolean);
     els.forEach(el => { el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); });
-    requestAnimationFrame(() => els.forEach(applyAnimation));
+    if (animate) requestAnimationFrame(() => els.forEach(applyAnimation));
   }
 
   function addClass(id, ...klasses) { get(id)?.classList.add(...klasses); }
   function removeClass(id, ...klasses) { get(id)?.classList.remove(...klasses); }
 
-  // Keep removal available (in case old hatches exist in the DOM)
   function removeTriangleHatch(name) { document.getElementById(`tri${name}fill`)?.remove(); }
-
-  // ✅ HATCHING DISABLED: do nothing (no green shading)
-  function addTriangleHatch(name) { return; }
+  function addTriangleHatch(name) { return; } // hatching disabled (no-op)
 
   function clearHighlights() {
     const svg = get('diagram');
     svg?.querySelectorAll('.highlight, .hl-strong, .hl-parallelogram, .hl-tri, .hover-hl')
       .forEach(el => el.classList.remove('highlight','hl-strong','hl-parallelogram','hl-tri','hover-hl'));
 
-    // Always remove any hatch polygons that might exist from older runs
     document.querySelectorAll('polygon[id^="tri"][id$="fill"]').forEach(el => el.remove());
 
     const stamp = document.getElementById('qed-stamp');
-    if (stamp) { stamp.classList.add('hidden'); stamp.classList.remove('stamp-drop'); stamp.setAttribute('aria-hidden','true'); }
+    if (stamp) {
+      // Per-lesson stamp text (Q.E.D. default, Q.E.F. for constructions)
+      stamp.textContent = (LESSON?.meta?.stampText || 'Q.E.D.');
+      stamp.classList.add('hidden');
+      stamp.classList.remove('stamp-drop');
+      stamp.setAttribute('aria-hidden','true');
+    }
   }
 
   function resetVisibility() {
@@ -242,16 +224,14 @@ const Diagram = (() => {
 })();
 
 /* =========================================================
-   Explore Mode (generic; per-lesson update function)
-   (scroll-safe: only pointermove during drag, no preventDefault)
+   Explore Mode (scroll-safe)
 ========================================================= */
 const Explore = (() => {
   let enabled = false;
   let dragKey = null;
   let dragPointerId = null;
   let draggingEl = null;
-
-  let P = {}; // {A:{x,y}, D:{x,y}, ...}
+  let P = {};
 
   function initFromLesson() {
     P = {};
@@ -290,16 +270,12 @@ const Explore = (() => {
 
   function onMove(evt) {
     if (!enabled || !dragKey) return;
-
     const { x, y } = pointerToSvgPoint(evt);
     const h = LESSON.explore.handles[dragKey];
-
     const clampX = h.clampX || [-Infinity, Infinity];
     const clampY = h.clampY || [-Infinity, Infinity];
-
     P[dragKey].x = clamp(x, clampX[0], clampX[1]);
     P[dragKey].y = clamp(y, clampY[0], clampY[1]);
-
     update();
   }
 
@@ -307,7 +283,6 @@ const Explore = (() => {
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', stopDrag);
     window.removeEventListener('pointercancel', stopDrag);
-
     try { draggingEl?.releasePointerCapture?.(dragPointerId); } catch (e) {}
     dragKey = null;
     dragPointerId = null;
@@ -319,10 +294,7 @@ const Explore = (() => {
     dragKey = key;
     dragPointerId = evt.pointerId;
     draggingEl = evt.target;
-
     draggingEl?.setPointerCapture?.(evt.pointerId);
-
-    // Only listen while dragging
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', stopDrag);
     window.addEventListener('pointercancel', stopDrag);
@@ -331,7 +303,6 @@ const Explore = (() => {
   function update() {
     if (!enabled) return;
 
-    // Keep handles positioned
     const handles = LESSON?.explore?.handles || {};
     for (const key of Object.keys(handles)) {
       const h = handles[key];
@@ -341,7 +312,6 @@ const Explore = (() => {
       }
     }
 
-    // Let the lesson update the actual diagram
     LESSON?.explore?.onUpdate?.(P, Diagram);
   }
 
@@ -483,7 +453,7 @@ const Proof = (() => {
   let focusMode = false;
   let practiceLevel = 0;
 
-  // --- MCQ shuffle seed (CHANGED): updates on reset so MCQ answer order changes each time
+  // MCQ shuffle seed (changes on Reset)
   let mcqRunSeed = randomU32();
 
   let solvedStatements = new Set([0]);
@@ -566,12 +536,23 @@ const Proof = (() => {
       Diagram.addClass(id, 'highlight', cls);
     });
   }
-  function revealFromStep(step) {
-    if (step.reveal?.length) Diagram.showMany(step.reveal);
+
+  function revealFromStep(step, animate = true) {
+    if (step.reveal?.length) Diagram.showMany(step.reveal, animate);
+  }
+
+  // KEY FIX (Option 1): rebuild the diagram exactly as if we stepped from 0..index
+  function rebuildVisibilityUpTo(index) {
+    Diagram.resetVisibility();
+    for (let i = 0; i <= index; i++) {
+      revealFromStep(LESSON.steps[i], false); // no animation spam when jumping
+    }
   }
 
   function applyFocusKeep(step) {
-    if (applyFocusKeep._lastIds) for (const id of applyFocusKeep._lastIds) Diagram.get(id)?.classList.remove('focus-keep');
+    if (applyFocusKeep._lastIds) {
+      for (const id of applyFocusKeep._lastIds) Diagram.get(id)?.classList.remove('focus-keep');
+    }
     const ids = step.focusKeep || [];
     for (const id of ids) Diagram.get(id)?.classList.add('focus-keep');
     applyFocusKeep._lastIds = ids.slice();
@@ -594,7 +575,7 @@ const Proof = (() => {
     const alreadySolved = solvedMCQ.has(stepIndex);
     const feedbackId = `mcq-feedback-${stepIndex}`;
 
-    // CHANGED: include mcqRunSeed so shuffling changes after each Reset
+    // MCQ shuffle changes each Reset
     const seed = ((0xC0FFEE ^ mcqRunSeed) + stepIndex * 9973) >>> 0;
     const r = mulberry32(seed);
 
@@ -670,14 +651,23 @@ const Proof = (() => {
       if (oldRow) { oldRow.classList.remove('active'); oldRow.setAttribute('aria-selected','false'); }
     }
 
-    Diagram.clearHighlights();
+    // BIG FIX: rebuild the diagram to the correct cumulative state
+    rebuildVisibilityUpTo(index);
+
     current = index;
 
     const row = document.getElementById(`line-${index}`);
     if (row) { row.classList.add('active'); row.setAttribute('aria-selected','true'); }
 
     const step = LESSON.steps[index];
-    revealFromStep(step);
+
+    // Now apply current-step highlight and hooks
+    Diagram.clearHighlights();
+    // (resetVisibility already cleared; but clearHighlights also ensures stamp text matches lesson)
+    // Keep state consistent:
+    // - resetVisibility cleared everything
+    // - we revealed up to index
+    // - now clearHighlights removes any leftover highlight from previous step
     highlightFromStep(step);
     step.onSelect?.();
 
@@ -727,7 +717,7 @@ const Proof = (() => {
     current = -1;
     stop();
 
-    // CHANGED: new MCQ shuffle seed each reset
+    // MCQ reshuffle each reset
     mcqRunSeed = randomU32();
 
     solvedStatements = new Set([0]);
@@ -894,7 +884,6 @@ const Proof = (() => {
       if (tr) setActive(parseInt(tr.id.replace('line-',''), 10), { scroll: false, setHash: true });
     });
 
-    // Row keyboard activation (Enter/Space)
     el.proofBody.addEventListener('keydown', (e) => {
       const tr = e.target.closest?.('tr');
       if (!tr) return;
@@ -904,7 +893,6 @@ const Proof = (() => {
       }
     });
 
-    // Hover highlight
     el.proofBody.addEventListener('mouseover', (e) => {
       const t = e.target;
       if (t.classList.contains('geom-ref')) t.dataset.target.split(',').forEach(id => Diagram.addClass(id, 'hover-hl'));
@@ -912,16 +900,6 @@ const Proof = (() => {
     el.proofBody.addEventListener('mouseout', (e) => {
       const t = e.target;
       if (t.classList.contains('geom-ref')) t.dataset.target.split(',').forEach(id => Diagram.removeClass(id, 'hover-hl'));
-    });
-
-    // Keyboard highlight
-    el.proofBody.addEventListener('focusin', (e) => {
-      const t = e.target;
-      if (t.classList?.contains('geom-ref')) t.dataset.target.split(',').forEach(id => Diagram.addClass(id, 'hover-hl'));
-    });
-    el.proofBody.addEventListener('focusout', (e) => {
-      const t = e.target;
-      if (t.classList?.contains('geom-ref')) t.dataset.target.split(',').forEach(id => Diagram.removeClass(id, 'hover-hl'));
     });
 
     // Practice selects
@@ -958,7 +936,7 @@ const Proof = (() => {
       }
     });
 
-    // Progress bar click-to-jump (gated via setActive)
+    // Progress bar click-to-jump
     function stepFromClientX(clientX) {
       const rect = el.progressContainer.getBoundingClientRect();
       const x = clientX - rect.left;
@@ -970,7 +948,6 @@ const Proof = (() => {
       setActive(stepFromClientX(e.clientX), { scroll: true });
     });
 
-    // Keyboard for progress bar
     el.progressContainer?.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') { e.preventDefault(); next({ scroll: true }); }
       if (e.key === 'ArrowLeft')  { e.preventDefault(); prev({ scroll: true }); }
@@ -982,7 +959,6 @@ const Proof = (() => {
       }
     });
 
-    // Hotkeys (disabled when modal open)
     window.addEventListener('keydown', (e) => {
       const modalOpen = el.modal && !el.modal.classList.contains('hidden');
       if (modalOpen && e.key !== 'Escape') return;
@@ -1019,7 +995,7 @@ const Proof = (() => {
 })();
 
 /* =========================================================
-   Height helper (Canvas iframe)
+   Height helper
 ========================================================= */
 function postHeight() {
   try {
@@ -1045,22 +1021,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(location.search);
   const key = (params.get('lesson') || 'I38').replace(/[^A-Za-z0-9_-]/g, '');
 
-  // 1) load lesson JS (sets window.LESSON)
   await loadScript(`lessons/${key}.lesson.js`);
   if (!window.LESSON) {
     document.getElementById('page-subtitle').textContent = `Error: lesson "${key}" did not define window.LESSON`;
     return;
   }
 
-  // 2) load SVG and mount
   const svgText = await loadText(`lessons/${key}.svg`);
   document.getElementById('diagram-mount').innerHTML = svgText;
 
-  // Ensure SVG has id="diagram" for engine queries
   const svg = document.querySelector('#diagram-mount svg');
   if (svg && !svg.id) svg.id = 'diagram';
 
-  // 3) hook up page title/subtitle/guiding question
   LESSON = window.LESSON;
   document.getElementById('page-title').textContent = LESSON.meta?.title || 'Euclid Interactive Proof';
   document.getElementById('page-subtitle').textContent = LESSON.meta?.subtitle || '';
@@ -1074,17 +1046,29 @@ window.addEventListener('DOMContentLoaded', async () => {
     hints.innerHTML = items.map(x => `<li>${x}</li>`).join('');
   }
 
-  // 4) init modules
+  // SUMMARY BOX support (new)
+  const summaryBox = document.getElementById('summary-box');
+  if (summaryBox) {
+    const html = LESSON.summaryHTML || '';
+    if (html.trim()) {
+      summaryBox.innerHTML = html;
+      summaryBox.classList.remove('hidden');
+      summaryBox.setAttribute('aria-hidden','false');
+    } else {
+      summaryBox.innerHTML = '';
+      summaryBox.classList.add('hidden');
+      summaryBox.setAttribute('aria-hidden','true');
+    }
+  }
+
   Proof.init(LESSON);
 
   validateLesson(LESSON);
   Diagram.resetVisibility();
 
-  // Explore mode setup
   Explore.bind();
   Explore.setEnabled(!!LESSON.explore?.enabled);
 
-  // render proof + activate step from hash
   Proof.renderProof();
 
   const m = location.hash.match(/line-(\d+)/);
@@ -1103,7 +1087,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   else mq.addListener(updateLayoutHint);
   updateLayoutHint();
 
-  // Tutorial modal + focus trap
+  // Tutorial modal + focus trap (unchanged from your version)
   const helpBtn = document.getElementById('btn-help');
   const modal = document.getElementById('tutorial-modal');
   const closeBtn = document.getElementById('btn-help-close');
