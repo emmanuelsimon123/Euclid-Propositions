@@ -73,8 +73,8 @@ function jaccard(aTokens, bTokens) {
 let LESSON = null;
 
 /* =========================================================
-   Floating tooltip system (fixes tooltip being covered by chart)
-   Uses existing: .badge.has-tooltip[data-tooltip="..."]
+   Floating tooltip system (tooltips over everything)
+   Uses: <span class="badge has-tooltip" data-tooltip="...">
 ========================================================= */
 (function installFloatingTooltips(){
   let tip = null;
@@ -133,12 +133,39 @@ let LESSON = null;
 
   document.addEventListener('scroll', () => {
     const active = document.querySelector('.badge.has-tooltip:hover');
-    if (active) positionTip(active);
+    if (active) {
+      // keep it in the right place while scrolling
+      const fakeEvt = null;
+      // recompute
+      const rect = active.getBoundingClientRect();
+      const t = tip;
+      if (!t || t.style.display === 'none') return;
+      const margin = 10;
+      const tipRect = t.getBoundingClientRect();
+      let left = rect.left + rect.width / 2 - tipRect.width / 2;
+      left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
+      let top = rect.top - tipRect.height - 10;
+      if (top < margin) top = rect.bottom + 10;
+      t.style.left = `${left}px`;
+      t.style.top = `${top}px`;
+    }
   }, true);
 
   window.addEventListener('resize', () => {
     const active = document.querySelector('.badge.has-tooltip:hover');
-    if (active) positionTip(active);
+    if (active) {
+      const rect = active.getBoundingClientRect();
+      const t = tip;
+      if (!t || t.style.display === 'none') return;
+      const margin = 10;
+      const tipRect = t.getBoundingClientRect();
+      let left = rect.left + rect.width / 2 - tipRect.width / 2;
+      left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
+      let top = rect.top - tipRect.height - 10;
+      if (top < margin) top = rect.bottom + 10;
+      t.style.left = `${left}px`;
+      t.style.top = `${top}px`;
+    }
   });
 })();
 
@@ -177,23 +204,12 @@ const Diagram = (() => {
   function addClass(id, ...klasses) { get(id)?.classList.add(...klasses); }
   function removeClass(id, ...klasses) { get(id)?.classList.remove(...klasses); }
 
+  // Keep removal available (in case old hatches exist in the DOM)
   function removeTriangleHatch(name) { document.getElementById(`tri${name}fill`)?.remove(); }
 
+  // ✅ HATCHING DISABLED: do nothing (no green shading)
   function addTriangleHatch(name) {
-    const id = `tri${name}fill`;
-    if (document.getElementById(id)) return;
-
-    const points = LESSON?.hatch?.[name];
-    if (!points) return;
-
-    const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
-    poly.setAttribute('id', id);
-    poly.classList.add('focus-keep');
-    poly.setAttribute('fill','url(#hatch)');
-    poly.setAttribute('opacity','0.25');
-    poly.setAttribute('points', points);
-
-    get('diagram')?.insertBefore(poly, get('labels'));
+    return;
   }
 
   function clearHighlights() {
@@ -201,7 +217,7 @@ const Diagram = (() => {
     svg?.querySelectorAll('.highlight, .hl-strong, .hl-parallelogram, .hl-tri, .hover-hl')
       .forEach(el => el.classList.remove('highlight','hl-strong','hl-parallelogram','hl-tri','hover-hl'));
 
-    // FIX: remove ALL triangle hatches so none stick between steps
+    // Always remove any hatch polygons that might exist from older runs
     document.querySelectorAll('polygon[id^="tri"][id$="fill"]').forEach(el => el.remove());
 
     const stamp = document.getElementById('qed-stamp');
@@ -285,12 +301,10 @@ const Explore = (() => {
     update();
   }
 
-  // UPDATED: allow "force" update even when explore mode is OFF.
-  // This fixes hatch polygons being created with stale default points.
-  function update(force = false) {
-    if (!enabled && !force) return;
+  function update() {
+    if (!enabled) return;
 
-    // Keep handles positioned (harmless even if hidden)
+    // Keep handles positioned
     const handles = LESSON?.explore?.handles || {};
     for (const key of Object.keys(handles)) {
       const h = handles[key];
@@ -300,7 +314,7 @@ const Explore = (() => {
       }
     }
 
-    // Let the lesson update the actual diagram geometry + hatch points
+    // Let the lesson update the actual diagram
     LESSON?.explore?.onUpdate?.(P, Diagram);
   }
 
@@ -654,10 +668,7 @@ const Proof = (() => {
     if (setHash) updateHash(index);
     if (scroll) scrollRowIfNeeded(row);
 
-    // UPDATED: always force a geometry sync (even when Explore is OFF)
-    // so hatch polygons (triABCfill etc.) align with the current points.
-    Explore.update(true);
-
+    if (Explore.isEnabled()) Explore.update();
     postHeight();
   }
 
@@ -1039,7 +1050,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   Explore.bind();
   Explore.setEnabled(!!LESSON.explore?.enabled);
 
-  // render proof + activate step from hash (gated inside Proof)
+  // render proof + activate step from hash
   Proof.renderProof();
 
   const m = location.hash.match(/line-(\d+)/);
