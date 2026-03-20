@@ -36,7 +36,7 @@ window.LESSON = {
   },
 
   explore: {
-    enabled: true,
+    enabled: false,
     handlesGroupId: "explore-handles",
     handles: {
       A: { handleId: "handleA", ringId: "handleA_ring", clampX: [180, 330], clampY: [80, 160] },
