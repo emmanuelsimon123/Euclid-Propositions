@@ -3,10 +3,102 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="refresh" content="0; url=engine.html?lesson=I38">
   <title>Euclid Interactive Proofs</title>
+  <style>
+    :root {
+      --ink: #1f2937; --muted: #606b7d; --accent: #2b6cb0;
+      --bg: #f9fafb; --board-bg: #fff; --border: #e5e7eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #f3f4f6; --muted: #9ca3af; --accent: #60a5fa;
+        --bg: #111827; --board-bg: #1f2937; --border: #374151;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0; background: var(--bg); color: var(--ink);
+    }
+    header {
+      padding: 2rem 1.5rem 1.5rem;
+      background: var(--board-bg);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    header h1 { margin: 0; font-size: 2rem; }
+    header p { margin: .5rem 0 0; color: var(--muted); font-size: 1.05rem; }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      display: block;
+      background: var(--board-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .card:hover, .card:focus {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0,0,0,.12);
+      outline: none;
+    }
+    .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .card-num {
+      font-size: .85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--accent);
+      margin-bottom: .35rem;
+    }
+    .card-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; }
+    .card-sub { font-size: .9rem; color: var(--muted); margin: 0; line-height: 1.4; }
+  </style>
 </head>
 <body>
-  <p>Loading… If not redirected, <a href="engine.html?lesson=I38">click here</a>.</p>
+  <header>
+    <h1>Euclid Interactive Proofs</h1>
+    <p>Step-by-step proof visualizations for Euclid's <em>Elements</em>, Book I</p>
+  </header>
+  <main>
+    <nav class="grid" aria-label="Available propositions">
+      <a class="card" href="engine.html?lesson=I38">
+        <div class="card-num">Proposition I.38</div>
+        <p class="card-title">Triangles on Equal Bases</p>
+        <p class="card-sub">Triangles on equal bases and in the same parallels are equal in area.</p>
+      </a>
+      <a class="card" href="engine.html?lesson=I39">
+        <div class="card-num">Proposition I.39</div>
+        <p class="card-title">Equal Triangles, Same Base</p>
+        <p class="card-sub">Equal triangles on the same base and on the same side are in the same parallels.</p>
+      </a>
+      <a class="card" href="engine.html?lesson=I40">
+        <div class="card-num">Proposition I.40</div>
+        <p class="card-title">Equal Triangles, Equal Bases</p>
+        <p class="card-sub">Equal triangles on equal bases and on the same side are in the same parallels.</p>
+      </a>
+      <a class="card" href="engine.html?lesson=I41">
+        <div class="card-num">Proposition I.41</div>
+        <p class="card-title">Parallelogram and Triangle</p>
+        <p class="card-sub">A parallelogram on the same base with a triangle and in the same parallels is double the triangle.</p>
+      </a>
+      <a class="card" href="engine.html?lesson=I42">
+        <div class="card-num">Proposition I.42</div>
+        <p class="card-title">Construct a Parallelogram</p>
+        <p class="card-sub">To construct a parallelogram equal to a given triangle in a given rectilinear angle.</p>
+      </a>
+    </nav>
+  </main>
 </body>
 </html>

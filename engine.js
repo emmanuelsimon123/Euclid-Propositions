@@ -1003,7 +1003,7 @@ function postHeight() {
       document.documentElement.scrollHeight || 0,
       document.body?.scrollHeight || 0
     );
-    parent.postMessage({ type: 'euclid-iframe-height', value: h }, '*');
+    parent.postMessage({ type: 'euclid-iframe-height', value: h }, window.location.origin);
   } catch (e) {}
 }
 window.addEventListener('resize', () => setTimeout(postHeight, 50));
