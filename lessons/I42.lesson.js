@@ -1,7 +1,7 @@
 // Euclid Book I Proposition 42
 window.LESSON = {
   meta: {
-    title: "Euclid’s Elements — Book I, Proposition 42",
+    title: "Euclid's Elements — Book I, Proposition 42",
     subtitle: "To construct a parallelogram equal to a given triangle in a given rectilinear angle.",
     stampText: "Q.E.F."
   },
@@ -15,31 +15,6 @@ window.LESSON = {
       `<strong>I.31</strong>: Use parallels to complete parallelogram <strong>FECG</strong>.`
     ]
   },
-
-  // Summary is now its own box (not in the hint list)
-  summaryHTML: `
-    <h2 style="margin:.2rem 0 .4rem;">Summary (Steps 3–12)</h2>
-    <p style="margin:.2rem 0 .8rem;color:var(--muted);font-weight:800;">
-      Three moves: halve the triangle, build a parallelogram that is double the half, conclude equality.
-    </p>
-
-    <div style="display:grid;gap:.8rem;">
-      <div style="padding:.75rem .9rem;background:#f7f7f9;border-left:4px solid #4a90e2;border-radius:6px;">
-        <div style="font-weight:900;margin-bottom:.2rem;">1) Split triangle ABC into two equal-area halves (Steps 3–6)</div>
-        <div>Bisect <strong>BC</strong> at <strong>E</strong> and join <strong>AE</strong>. Then triangles <strong>ABE</strong> and <strong>AEC</strong> are equal in area (I.38), so <strong>ABC is double AEC</strong>.</div>
-      </div>
-
-      <div style="padding:.75rem .9rem;background:#f7f7f9;border-left:4px solid #7ed321;border-radius:6px;">
-        <div style="font-weight:900;margin-bottom:.2rem;">2) Force the required angle and form a parallelogram (Steps 7–8)</div>
-        <div>Copy the given angle <strong>D</strong> at <strong>E</strong> to make <strong>∠CEF</strong>, then draw parallels to complete parallelogram <strong>FECG</strong>.</div>
-      </div>
-
-      <div style="padding:.75rem .9rem;background:#f7f7f9;border-left:4px solid #f5a623;border-radius:6px;">
-        <div style="font-weight:900;margin-bottom:.2rem;">3) Match “double the same triangle” (Steps 9–12)</div>
-        <div>Parallelogram <strong>FECG</strong> is double triangle <strong>AEC</strong> (I.41). Triangle <strong>ABC</strong> is also double <strong>AEC</strong>. So the parallelogram equals the given triangle (C.N.1), and its angle matches <strong>D</strong> by construction.</div>
-      </div>
-    </div>
-  `,
 
   diagram: {
     initialHidden: [
@@ -259,7 +234,7 @@ window.LESSON = {
       ],
       reason: { label:'I.31', kind:'constr', tooltip:'Through a given point, to draw a straight line parallel to a given straight line.' },
       reveal: ['CG','FG','ptG','lblG'],
-      coach: 'Using parallels completes the “frame” of the parallelogram.',
+      coach: 'Using parallels completes the "frame" of the parallelogram.',
       announce: ['AG ∥ EC', 'CG ∥ EF'],
       highlight: [
         {id:'AG', mode:'strong'},{id:'EC', mode:'strong'},
